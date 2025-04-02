@@ -1,11 +1,12 @@
 import { create } from "zustand";
+import { EnumPriority, EnumStatus } from "./types";
 
 export type Task = {
   id: number;
   title: string;
   description: string;
-  status: "A Fazer" | "Em andamento" | "Concluída";
-  priority: "Alta" | "Média" | "Baixa"
+  status: EnumStatus;
+  priority: EnumPriority;
 };
 
 type TaskStore = {
@@ -13,6 +14,8 @@ type TaskStore = {
   fetchTasks: () => Promise<void>;
   addTask: (task: Omit<Task, "id">) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;
+  updateTask: (status: EnumStatus, taskId: number) => Promise<void>;
+
   // toggleFavorite: (id: number) => Promise<void>;
   duplicateTask: (id: number) => Promise<void>;
 };
@@ -26,7 +29,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   addTask: async (task) => {
-    const newTask = { ...task, id: Date.now() }; 
+    const newTask = { ...task, id: Date.now() };
     set({ tasks: [...get().tasks, newTask] });
 
     await fetch("/api/tasks", {
@@ -41,6 +44,23 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
     await fetch(`/api/tasks/${id}`, {
       method: "DELETE",
+    });
+  },
+  updateTask: async (status: EnumStatus, taskId: number) => {
+    const taskToUpdate = get().tasks.find((task) => task.id === taskId);
+    if (!taskToUpdate) return;
+
+    const updatedTask = { ...taskToUpdate, status };
+    set({
+      tasks: get().tasks.map((task) =>
+        task.id === taskId ? updatedTask : task
+      ),
+    });
+
+    await fetch(`/api/tasks/${taskId}`, {
+      method: "PUT",
+      body: JSON.stringify(updatedTask),
+      headers: { "Content-Type": "application/json" },
     });
   },
 

@@ -8,7 +8,7 @@ export function TaskBoard() {
 
   const columns = [
     { title: "A Fazer", status: "A Fazer" },
-    { title: "Em andamento", status: "Em andamento" },
+    { title: "Em progresso", status: "Em progresso" },
     { title: "Concluída", status: "Concluída" },
   ];
 
@@ -19,6 +19,7 @@ export function TaskBoard() {
           <TaskColumn
             key={column.status}
             title={column.title}
+            status={column.status}
             tasks={tasks.filter((task) => task.status === column.status)}
           />
         ))}
