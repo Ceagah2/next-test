@@ -1,12 +1,12 @@
 "use client";
 
-import { CreateTaskForm } from "@/components/ui/create-task-form";
-import { TasksTable } from "@/components/ui/tasks-table";
 import { useTaskStore } from "@/store/useTaskStore";
 import { useEffect } from "react";
+import { CreateTaskForm } from "./create-task-form";
+import { TaskBoard } from "./tasks-board";
 
 export function TaskList() {
-  const { tasks, fetchTasks } = useTaskStore();
+  const { fetchTasks } = useTaskStore();
 
   useEffect(() => {
     fetchTasks();
@@ -20,7 +20,7 @@ export function TaskList() {
       </div>
 
       <div className="border rounded-lg p-4 bg-card">
-        <TasksTable tasks={tasks} />
+        <TaskBoard />
       </div>
     </>
   );

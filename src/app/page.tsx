@@ -1,4 +1,5 @@
-import { TaskList } from "@/components/ui/tasks-list";
+import { TaskList } from "@/components/molecules/tasks-list";
+
 
 export default function Home() {
   return (
