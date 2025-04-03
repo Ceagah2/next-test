@@ -29,7 +29,6 @@ export function TaskColumn({
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
 
   const handleDelete = () => {
-    console.log(taskToDelete);
     if (taskToDelete) {
       deleteTask(taskToDelete);
       setTaskToDelete(null);
