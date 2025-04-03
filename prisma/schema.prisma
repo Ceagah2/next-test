@@ -10,23 +10,34 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL") // SQLite usa um arquivo local
+  url      = env("DATABASE_URL") 
 }
 
-
 model Task {
-  id          String     @id @default(auto()) @map("uuid")
-  title       String
+  id        String    @id @default(uuid())
+  title     String
   description String?
-  priority    String
-  status      String
-  subtasks    Subtask[]  @relation("TaskToSubtask")
+  priority  EnumPriority
+  status    EnumStatus
+  subtasks  Subtask[]
 }
 
 model Subtask {
-  id        String  @id @default(auto()) @map("uuid")
+  id        String   @id @default(uuid())
   title     String
-  completed Boolean @default(false)
+  completed Boolean  @default(false)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId    String
-  task      Task    @relation("TaskToSubtask", fields: [taskId], references: [id])
+}
+
+enum EnumPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum EnumStatus {
+  TODO
+  IN_PROGRESS
+  DONE
 }
