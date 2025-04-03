@@ -5,11 +5,11 @@ export async function PUT(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { status } = await req.json();
+  const { title, description, priority, status } = await req.json();
 
   const updatedTask = await prisma.task.update({
     where: { id: params.id },
-    data: { status },
+    data: { title, description, priority, status },
   });
 
   return NextResponse.json(updatedTask);

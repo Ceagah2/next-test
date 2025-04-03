@@ -15,22 +15,24 @@ export interface Task {
   priority: EnumPriority;
   status: EnumStatus;
   subtasks: Subtask[];
+  favorite?: boolean;
 }
 
 type TaskStore = {
   tasks: Task[];
   loading: boolean;
   fetchTasks: () => Promise<void>;
-  addTask: (task: Omit<Task, "id">) => Promise<void>;
+  addTask: (task: Omit<Task, "id" | "subtasks" | "favorite">) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
-  updateTask: (status: EnumStatus, taskId: string) => Promise<void>;
-  addSubtask: (taskId: string, title: string) => Promise<Subtask | null>;
-  toggleSubtaskCompletion: (taskId: string, subtaskId: string) => Promise<void>;
+  updateTask: (updatedTask: Task) => Promise<void>;
+  duplicateTask: (taskId: string) => Promise<void>;
+  toggleFavorite: (taskId: string) => Promise<void>;
 };
 
-export const useTaskStore = create<TaskStore>((set) => ({
+export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
   loading: false,
+
   fetchTasks: async () => {
     set({ loading: true });
     const res = await fetch("/api/tasks");
@@ -44,13 +46,11 @@ export const useTaskStore = create<TaskStore>((set) => ({
       body: JSON.stringify(task),
       headers: { "Content-Type": "application/json" },
     });
-
     if (!res.ok) {
       const error = await res.json();
       alert(error.message);
       return;
     }
-
     const newTask = await res.json();
     set((state) => ({
       tasks: [...state.tasks, newTask],
@@ -59,75 +59,58 @@ export const useTaskStore = create<TaskStore>((set) => ({
 
   deleteTask: async (id) => {
     await fetch(`/api/tasks/${id}`, { method: "DELETE" });
-    set((state) => ({ tasks: state.tasks.filter((task) => task.id !== id) }));
+    set((state) => ({
+      tasks: state.tasks.filter((task) => task.id !== id),
+    }));
   },
 
-  updateTask: async (status: EnumStatus, taskId: string) => {
-    const res = await fetch(`/api/tasks/${taskId}`, {
+  updateTask: async (updatedTask: Task) => {
+    const res = await fetch(`/api/tasks/${updatedTask.id}`, {
       method: "PUT",
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(updatedTask),
       headers: { "Content-Type": "application/json" },
     });
-
-    const updatedTask = await res.json();
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === taskId ? updatedTask : task
-      ),
-    }));
-  },
-
-  addSubtask: async (
-    taskId: string,
-    subtaskTitle: string
-  ): Promise<Subtask | null> => {
-    const res = await fetch(`/api/tasks/${taskId}/subtasks`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: subtaskTitle }),
-    });
-
     if (!res.ok) {
-      console.error("Erro ao criar subtask", await res.json());
-      return null;
-    }
-
-    const newSubtask: Subtask = await res.json();
-
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === taskId
-          ? { ...task, subtasks: [...(task.subtasks || []), newSubtask] }
-          : task
-      ),
-    }));
-
-    return newSubtask;
-  },
-
-  toggleSubtaskCompletion: async (taskId, subtaskId) => {
-    const res = await fetch(`/api/tasks/${taskId}/subtasks/${subtaskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!res.ok) {
-      console.error("Erro ao atualizar a subtask", await res.json());
+      const error = await res.json();
+      alert(error.message);
       return;
     }
-
-    const updatedSubtask = await res.json();
+    const taskFromBackend = await res.json();
     set((state) => ({
       tasks: state.tasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              subtasks: task.subtasks.map((subtask) =>
-                subtask.id === subtaskId ? updatedSubtask : subtask
-              ),
-            }
-          : task
+        task.id === taskFromBackend.id ? taskFromBackend : task
       ),
+    }));
+  },
+
+  duplicateTask: async (taskId: string) => {
+    const taskToDuplicate = get().tasks.find((task) => task.id === taskId);
+    if (!taskToDuplicate) return;
+    const { ...rest } = taskToDuplicate;
+    const duplicatedTask = {
+      ...rest,
+      title: taskToDuplicate.title + " (Cópia)",
+    };
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      body: JSON.stringify(duplicatedTask),
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      alert(error.message);
+      return;
+    }
+    const newTask = await res.json();
+    set((state) => ({ tasks: [...state.tasks, newTask] }));
+  },
+
+  toggleFavorite: async (taskId: string) => {
+    const task = get().tasks.find((task) => task.id === taskId);
+    if (!task) return;
+    const updatedTask = { ...task, favorite: !task.favorite };
+    set((state) => ({
+      tasks: state.tasks.map((t) => (t.id === taskId ? updatedTask : t)),
     }));
   },
 }));

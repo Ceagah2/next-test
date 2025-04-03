@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/atoms/button";
 import {
   Dialog,
@@ -9,9 +8,10 @@ import {
 } from "@/components/atoms/dialog";
 import { EnumStatus } from "@/store/types";
 import { Task, useTaskStore } from "@/store/useTaskStore";
-import { Trash2 } from "lucide-react";
+import { Copy, Star, StarOff, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Card, CardDescription, CardTitle } from "../atoms/card";
+import { EditTaskModal } from "./edit-task-modal";
 
 export function TaskColumn({
   title,
@@ -21,12 +21,12 @@ export function TaskColumn({
   tasks: Task[];
   status: string;
 }) {
-  const { deleteTask, updateTask, addSubtask, toggleSubtaskCompletion } =
+  const { deleteTask, updateTask, duplicateTask, toggleFavorite } =
     useTaskStore();
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
 
   const handleDelete = () => {
     if (taskToDelete) {
@@ -37,10 +37,14 @@ export function TaskColumn({
     }
   };
 
-  const handleMoveTask = (newStatus: EnumStatus, taskId: string) => {
-    updateTask(newStatus, taskId);
-    setSelectedTask(null);
-  };
+ const handleMoveTask = (newStatus: EnumStatus, taskId: string) => {
+   const taskToUpdate = tasks.find((task) => task.id === taskId);
+   if (taskToUpdate) {
+     const updatedTask = { ...taskToUpdate, status: newStatus };
+     updateTask(updatedTask);
+   }
+   setSelectedTask(null);
+ };
 
   return (
     <div className="bg-gray-100 p-4 rounded-lg shadow-md w-80">
@@ -84,82 +88,8 @@ export function TaskColumn({
               <p>
                 <strong>Prioridade:</strong> {selectedTask.priority}
               </p>
-              <h4 className="text-md font-bold">Subtarefas</h4>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                <div
-                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                  style={{
-                    width: `$
-                      {selectedTask?.subtasks?.length
-                        ? (selectedTask.subtasks.filter((s) => s.completed)
-                            .length /
-                            selectedTask.subtasks.length) *
-                          100
-                        : 0
-                    }%`,
-                  }}
-                ></div>
-              </div>
-              <ul>
-                {selectedTask?.subtasks?.map((subtask) => (
-                  <li key={subtask.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={subtask.completed}
-                      onChange={async () => {
-                        await toggleSubtaskCompletion(
-                          selectedTask.id,
-                          subtask.id
-                        );
-                        const res = await fetch(
-                          `/api/tasks/${selectedTask.id}`
-                        );
-                        const updatedTask = await res.json();
-                        setSelectedTask(updatedTask);
-                      }}
-                    />
-                    <span
-                      className={
-                        subtask.completed ? "line-through text-gray-500" : ""
-                      }
-                    >
-                      {subtask.title}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex gap-2 mt-2">
-                <input
-                  type="text"
-                  value={newSubtaskTitle}
-                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                  placeholder="Nova sub-tarefa"
-                  className="border p-2 rounded w-full"
-                />
-                <Button
-                  onClick={async () => {
-                    if (newSubtaskTitle.trim()) {
-                      const newSubtask = await addSubtask(
-                        selectedTask.id,
-                        newSubtaskTitle
-                      );
 
-                      if (newSubtask) {
-                        const res = await fetch(
-                          `/api/tasks/${selectedTask.id}`
-                        );
-                        const updatedTask = await res.json();
-
-                        setSelectedTask(updatedTask);
-                        setNewSubtaskTitle("");
-                      }
-                    }
-                  }}
-                >
-                  Adicionar
-                </Button>
-              </div>
-              <div className="flex justify-between">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   onClick={() =>
@@ -176,6 +106,42 @@ export function TaskColumn({
                 >
                   Mover para Concluído
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    await duplicateTask(selectedTask.id);
+                  }}
+                >
+                  <Copy size={16} className="mr-1" /> Duplicar
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    await toggleFavorite(selectedTask.id);
+                    setSelectedTask((prev) =>
+                      prev ? { ...prev, favorite: !prev.favorite } : prev
+                    );
+                  }}
+                >
+                  {selectedTask.favorite ? (
+                    <>
+                      <StarOff size={16} className="mr-1" /> Desfavoritar
+                    </>
+                  ) : (
+                    <>
+                      <Star size={16} className="mr-1" /> Favoritar
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditModalOpen(true);
+                  }}
+                >
+                  Editar
+                </Button>
               </div>
               <Button
                 variant="destructive"
@@ -190,6 +156,15 @@ export function TaskColumn({
           )}
         </DialogContent>
       </Dialog>
+      {isEditModalOpen && selectedTask && (
+        <EditTaskModal
+          task={selectedTask}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedTask(null);
+          }}
+        />
+      )}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent>
           <DialogHeader>
