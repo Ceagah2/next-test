@@ -1,5 +1,4 @@
 "use client";
-
 import { useTaskStore } from "@/store/useTaskStore";
 import { useEffect, useState } from "react";
 import { CreateTaskForm } from "./create-task-form";
@@ -17,17 +16,25 @@ export function TaskList() {
   if (!isMounted) return null;
 
   return (
-    <>
-      <div className="mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold mb-4">Gerenciador de Tarefas</h1>
+    <div className="space-y-8 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">
+            Gerenciador de Tarefas
+          </h1>
+          <div className="lg:hidden">
+            <CreateTaskForm />
+          </div>
+        </div>
+
+        <div className="hidden lg:block">
           <CreateTaskForm />
         </div>
       </div>
 
-      <div className="border rounded-lg p-4 bg-card">
+      <div className="rounded-lg border bg-card p-4 shadow-sm md:w-full md:max-w-5xl md:flex md:flex-col sm:p-6">
         <TaskBoard />
       </div>
-    </>
+    </div>
   );
 }

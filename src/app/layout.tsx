@@ -16,15 +16,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={inter.className}>
+    <html lang="pt-BR" className="h-full">
+      <body className={`${inter.className} h-full flex flex-col`}>
         <header className="border-b">
-          <div className="container mx-auto p-4 flex items-center justify-between">
-            <h1 className="text-xl font-bold">Task Manager</h1>
-            <MainNav />
+          <div className="container mx-auto px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold">Task Manager</h1>
+              <MainNav />
+            </div>
           </div>
         </header>
-        <main>{children}</main>
+
+        <main className="flex-1 bg-gray-50">
+          <div className="container mx-auto px-4 sm:px-6 py-8 h-full">
+            {children}
+          </div>
+        </main>
       </body>
     </html>
   );

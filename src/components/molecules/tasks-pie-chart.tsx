@@ -1,6 +1,4 @@
 "use client";
-
-import { getStatusColor } from "@/lib/task-helpers";
 import { EnumStatus } from "@/store/types";
 import {
   Cell,
@@ -11,30 +9,31 @@ import {
   Tooltip,
 } from "recharts";
 
-const COLORS = [
-  getStatusColor(EnumStatus.DONE).split(" ")[0],
-  getStatusColor(EnumStatus.IN_PROGRESS).split(" ")[0],
-  getStatusColor(EnumStatus.TO_DO).split(" ")[0],
-].map((color) => color.replace("bg-", "").replace("-100", "-600"));
+const STATUS_COLORS = {
+  [EnumStatus.DONE]: "#16a34a", 
+  [EnumStatus.IN_PROGRESS]: "#ca8a04", 
+  [EnumStatus.TO_DO]: "#4b5563", 
+};
 
 interface TasksPieChartProps {
   data: Array<{
     name: string;
     value: number;
+    status: EnumStatus;
   }>;
 }
 
 export function TasksPieChart({ data }: TasksPieChartProps) {
   return (
-    <div className="h-[300px]">
+    <div className="h-[300px] w-full lg:h-[400px]">
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={80}
+            innerRadius="40%"
+            outerRadius="70%"
             paddingAngle={2}
             dataKey="value"
             nameKey="name"
@@ -42,24 +41,34 @@ export function TasksPieChart({ data }: TasksPieChartProps) {
             {data.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
+                fill={STATUS_COLORS[entry.status]}
+                stroke="#fff"
+                strokeWidth={2}
               />
             ))}
           </Pie>
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "6px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
+            content={({ payload }) => (
+              <div className="bg-white p-2 rounded-lg shadow-lg border">
+                <p className="font-medium">{payload?.[0]?.name}</p>
+                <p className="text-sm">Quantidade: {payload?.[0]?.value}</p>
+              </div>
+            )}
           />
           <Legend
-            layout="vertical"
-            verticalAlign="middle"
-            align="right"
+            layout="horizontal"
+            verticalAlign="bottom"
+            align="center"
             wrapperStyle={{
-              paddingLeft: "24px",
+              paddingTop: "20px",
+            }}
+            formatter={(value) => {
+              const status = data.find((d) => d.name === value)?.status;
+              return (
+                <span style={{ color: STATUS_COLORS[status as EnumStatus] }}>
+                  {value}
+                </span>
+              );
             }}
           />
         </PieChart>
