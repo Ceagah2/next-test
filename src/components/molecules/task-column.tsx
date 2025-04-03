@@ -21,10 +21,12 @@ export function TaskColumn({
   tasks: Task[];
   status: string;
 }) {
-  const { deleteTask, updateTask } = useTaskStore();
+  const { deleteTask, updateTask, addSubtask, toggleSubtaskCompletion } =
+    useTaskStore();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<number | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
 
   const handleDelete = () => {
     if (taskToDelete) {
@@ -34,7 +36,7 @@ export function TaskColumn({
     }
   };
 
-  const handleMoveTask = (newStatus: EnumStatus, taskId: number) => {
+  const handleMoveTask = (newStatus: EnumStatus, taskId: string) => {
     updateTask(newStatus, taskId);
     setSelectedTask(null);
   };
@@ -81,6 +83,89 @@ export function TaskColumn({
               <p>
                 <strong>Prioridade:</strong> {selectedTask.priority}
               </p>
+              <h4 className="text-md font-bold">Subtarefas</h4>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${
+                      selectedTask?.subtasks?.length
+                        ? (selectedTask.subtasks.filter((s) => s.completed)
+                            .length /
+                            selectedTask.subtasks.length) *
+                          100
+                        : 0
+                    }%`,
+                  }}
+                ></div>
+              </div>
+              <ul>
+                {selectedTask?.subtasks?.map((subtask) => (
+                  <li key={subtask.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={subtask.completed}
+                      onChange={() => {
+                        toggleSubtaskCompletion(selectedTask.id, subtask.id);
+                        setSelectedTask((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                subtasks: prev.subtasks.map((s) =>
+                                  s.id === subtask.id
+                                    ? { ...s, completed: !s.completed }
+                                    : s
+                                ),
+                              }
+                            : prev
+                        );
+                      }}
+                    />
+                    <span
+                      className={
+                        subtask.completed ? "line-through text-gray-500" : ""
+                      }
+                    >
+                      {subtask.title}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="text"
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  placeholder="Nova sub-tarefa"
+                  className="border p-2 rounded w-full"
+                />
+                <Button
+                  onClick={() => {
+                    if (newSubtaskTitle.trim()) {
+                      const newSubtask = {
+                        id: crypto.randomUUID(),
+                        title: newSubtaskTitle,
+                        completed: false,
+                      };
+
+                      addSubtask(selectedTask.id, newSubtask);
+
+                      setSelectedTask((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              subtasks: [...(prev.subtasks || []), newSubtask],
+                            }
+                          : prev
+                      );
+
+                      setNewSubtaskTitle("");
+                    }
+                  }}
+                >
+                  Adicionar
+                </Button>
+              </div>
               <div className="flex justify-between">
                 <Button
                   variant="outline"
@@ -92,7 +177,9 @@ export function TaskColumn({
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => handleMoveTask(EnumStatus.DONE, selectedTask.id)}
+                  onClick={() =>
+                    handleMoveTask(EnumStatus.DONE, selectedTask.id)
+                  }
                 >
                   Mover para Concluído
                 </Button>

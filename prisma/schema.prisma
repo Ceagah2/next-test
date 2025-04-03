@@ -15,11 +15,18 @@ datasource db {
 
 
 model Task {
-  id          Int      @id @default(autoincrement())
+  id          String     @id @default(auto()) @map("uuid")
   title       String
   description String?
-  status      String   @default("A Fazer") // "A Fazer", "Em Andamento", "Concluída"
-  priority    String   @default("Média")   // "Alta", "Média", "Baixa"
-  isFavorited Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  priority    String
+  status      String
+  subtasks    Subtask[]  @relation("TaskToSubtask")
+}
+
+model Subtask {
+  id        String  @id @default(auto()) @map("uuid")
+  title     String
+  completed Boolean @default(false)
+  taskId    String
+  task      Task    @relation("TaskToSubtask", fields: [taskId], references: [id])
 }

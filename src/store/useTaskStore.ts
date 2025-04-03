@@ -1,23 +1,28 @@
 import { create } from "zustand";
 import { EnumPriority, EnumStatus } from "./types";
 
-export type Task = {
-  id: number;
+interface Subtask {
+  id: string;
   title: string;
-  description: string;
-  status: EnumStatus;
-  priority: EnumPriority;
-};
+  completed: boolean;
+}
 
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  priority: EnumPriority;
+  status: EnumStatus;
+  subtasks: Subtask[];
+}
 type TaskStore = {
   tasks: Task[];
   fetchTasks: () => Promise<void>;
   addTask: (task: Omit<Task, "id">) => Promise<void>;
-  deleteTask: (id: number) => Promise<void>;
-  updateTask: (status: EnumStatus, taskId: number) => Promise<void>;
-
-  // toggleFavorite: (id: number) => Promise<void>;
-  duplicateTask: (id: number) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  updateTask: (status: EnumStatus, taskId: string) => Promise<void>;
+  addSubtask: (taskId: string, subtask: Subtask) => void;
+  toggleSubtaskCompletion: (taskId: string, subtaskId: string) => void;
 };
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -29,7 +34,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   addTask: async (task) => {
-    const newTask = { ...task, id: Date.now() };
+    const newTask = { ...task, id: Date.now().toString() };
     set({ tasks: [...get().tasks, newTask] });
 
     await fetch("/api/tasks", {
@@ -46,7 +51,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       method: "DELETE",
     });
   },
-  updateTask: async (status: EnumStatus, taskId: number) => {
+  updateTask: async (status: EnumStatus, taskId: string) => {
     const taskToUpdate = get().tasks.find((task) => task.id === taskId);
     if (!taskToUpdate) return;
 
@@ -63,22 +68,28 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       headers: { "Content-Type": "application/json" },
     });
   },
+  addSubtask: (taskId, subtask) =>
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === taskId
+          ? { ...task, subtasks: [...(task.subtasks || []), subtask] }
+          : task
+      ),
+    })),
 
-  duplicateTask: async (id) => {
-    const taskToDuplicate = get().tasks.find((task) => task.id === id);
-    if (!taskToDuplicate) return;
-
-    const duplicatedTask = {
-      ...taskToDuplicate,
-      id: Date.now(),
-      title: taskToDuplicate.title + " (Cópia)",
-    };
-    set({ tasks: [...get().tasks, duplicatedTask] });
-
-    await fetch("/api/tasks", {
-      method: "POST",
-      body: JSON.stringify(duplicatedTask),
-      headers: { "Content-Type": "application/json" },
-    });
-  },
+  toggleSubtaskCompletion: (taskId, subtaskId) =>
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              subtasks: task.subtasks.map((subtask) =>
+                subtask.id === subtaskId
+                  ? { ...subtask, completed: !subtask.completed }
+                  : subtask
+              ),
+            }
+          : task
+      ),
+    })),
 }));
