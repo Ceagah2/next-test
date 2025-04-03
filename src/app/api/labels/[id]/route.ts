@@ -1,20 +1,24 @@
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function DELETE(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
+  const url = request.nextUrl;
+  const id = url.pathname.split("/").pop();
   try {
-    const { id } = context.params;
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID da label é obrigatório" },
+        { status: 400 }
+      );
+    }
 
     await prisma.label.delete({
       where: { id },
     });
 
     return NextResponse.json({ success: true });
-  } catch (e) {
-    console.error("Erro ao excluir label:", e);
+  } catch (error) {
+    console.error("Erro ao excluir label:", error);
     return NextResponse.json(
       { error: "Não foi possível excluir a label" },
       { status: 500 }

@@ -1,15 +1,13 @@
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(
-  request: Request,
-  context: { params: { id: string } } 
-) {
+export async function PUT(request: NextRequest) {
+  const url = request.nextUrl;
+  const id = url.pathname.split("/").pop();
+
   try {
-    const { id } = context.params; 
     const data = await request.json();
 
-    console.log("API Recebido:", { id, data });
 
     const updatedTask = await prisma.task.update({
       where: { id },
@@ -27,7 +25,6 @@ export async function PUT(
       include: { labels: true },
     });
 
-    console.log("Banco Atualizado:", updatedTask);
     return NextResponse.json(updatedTask);
   } catch (error) {
     console.error("Error updating task:", error);
@@ -39,10 +36,9 @@ export async function PUT(
 }
 
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  await prisma.task.delete({ where: { id: params.id } });
+export async function DELETE(request: NextRequest) {
+  const url = request.nextUrl;
+  const id = url.pathname.split("/").pop();
+  await prisma.task.delete({ where: { id } });
   return NextResponse.json({ message: "Task excluída" });
 }

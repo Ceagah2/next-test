@@ -1,33 +1,33 @@
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
+  const url = request.nextUrl;
+  const id = url.pathname.split("/").pop();
   const subtasks = await prisma.subtask.findMany({
-    where: { taskId: params.id },
+    where: { taskId: id },
   });
   return NextResponse.json(subtasks);
 }
 
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const body = await req.json();
+export async function POST( request: NextRequest) {
+  const url = request.nextUrl;
+  const id = url.pathname.split("/").pop();
+  if (!id) {
+    return NextResponse.json({ error: "Invalid task ID" }, { status: 400 });
+  }
+  const body = await request.json();
   const newSubtask = await prisma.subtask.create({
-    data: { title: body.title, completed: false, taskId: params.id },
+    data: { title: body.title, completed: false, taskId: id },
   });
   return NextResponse.json(newSubtask);
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string; subtaskId: string } }
-) {
+export async function PATCH(request: NextRequest) {
+  const url = request.nextUrl;
+  const id = url.pathname.split("/").pop();
   const subtask = await prisma.subtask.findUnique({
-    where: { id: params.subtaskId },
+    where: { id },
   });
   if (!subtask) {
     return NextResponse.json(
@@ -37,7 +37,7 @@ export async function PATCH(
   }
 
   const updatedSubtask = await prisma.subtask.update({
-    where: { id: params.subtaskId },
+    where: { id },
     data: { completed: !subtask.completed },
   });
 

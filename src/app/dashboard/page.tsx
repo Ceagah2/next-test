@@ -17,20 +17,23 @@ export default function DashboardPage() {
     fetchTasks();
   }, [fetchTasks]);
 
-  const chartData = [
-    {
-      name: getStatusLabel(EnumStatus.DONE),
-      value: tasks.filter((t) => t.status === EnumStatus.DONE).length,
-    },
-    {
-      name: getStatusLabel(EnumStatus.IN_PROGRESS),
-      value: tasks.filter((t) => t.status === EnumStatus.IN_PROGRESS).length,
-    },
-    {
-      name: getStatusLabel(EnumStatus.TO_DO),
-      value: tasks.filter((t) => t.status === EnumStatus.TO_DO).length,
-    },
-  ];
+ const chartData = [
+   {
+     name: getStatusLabel(EnumStatus.DONE),
+     value: tasks.filter((t) => t.status === EnumStatus.DONE).length,
+     status: EnumStatus.DONE,
+   },
+   {
+     name: getStatusLabel(EnumStatus.IN_PROGRESS),
+     value: tasks.filter((t) => t.status === EnumStatus.IN_PROGRESS).length,
+     status: EnumStatus.IN_PROGRESS,
+   },
+   {
+     name: getStatusLabel(EnumStatus.TO_DO),
+     value: tasks.filter((t) => t.status === EnumStatus.TO_DO).length,
+     status: EnumStatus.TO_DO,
+   },
+ ];
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(
