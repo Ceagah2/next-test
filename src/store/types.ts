@@ -1,13 +1,11 @@
-
-
-export enum EnumStatus {
-  IN_PROGRESS = "Em progresso",
-  DONE = "Concluída",
-  TO_DO = "A Fazer",
+export enum EnumPriority {
+  HIGH = "HIGH",
+  MEDIUM = "MEDIUM",
+  LOW = "LOW",
 }
 
-export enum EnumPriority {
-  HIGH = "Alta",
-  MEDIUM = "Média",
-  LOW = "Baixa"
+export enum EnumStatus {
+  TO_DO = "TODO",
+  IN_PROGRESS = "IN_PROGRESS",
+  DONE = "DONE",
 }

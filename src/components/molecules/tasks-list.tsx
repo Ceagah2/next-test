@@ -1,16 +1,20 @@
 "use client";
 
 import { useTaskStore } from "@/store/useTaskStore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CreateTaskForm } from "./create-task-form";
 import { TaskBoard } from "./tasks-board";
 
 export function TaskList() {
+  const [isMounted, setIsMounted] = useState(false);
+
   const { fetchTasks } = useTaskStore();
 
   useEffect(() => {
+    setIsMounted(true);
     fetchTasks();
-  }, [fetchTasks]); 
+  }, [fetchTasks]);
+  if (!isMounted) return null; 
 
   return (
     <>

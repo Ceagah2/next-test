@@ -89,8 +89,8 @@ export function TaskColumn({
                 <div
                   className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
                   style={{
-                    width: `${
-                      selectedTask?.subtasks?.length
+                    width: `$
+                      {selectedTask?.subtasks?.length
                         ? (selectedTask.subtasks.filter((s) => s.completed)
                             .length /
                             selectedTask.subtasks.length) *
@@ -106,20 +106,16 @@ export function TaskColumn({
                     <input
                       type="checkbox"
                       checked={subtask.completed}
-                      onChange={() => {
-                        toggleSubtaskCompletion(selectedTask.id, subtask.id);
-                        setSelectedTask((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                subtasks: prev.subtasks.map((s) =>
-                                  s.id === subtask.id
-                                    ? { ...s, completed: !s.completed }
-                                    : s
-                                ),
-                              }
-                            : prev
+                      onChange={async () => {
+                        await toggleSubtaskCompletion(
+                          selectedTask.id,
+                          subtask.id
                         );
+                        const res = await fetch(
+                          `/api/tasks/${selectedTask.id}`
+                        );
+                        const updatedTask = await res.json();
+                        setSelectedTask(updatedTask);
                       }}
                     />
                     <span
@@ -141,26 +137,22 @@ export function TaskColumn({
                   className="border p-2 rounded w-full"
                 />
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     if (newSubtaskTitle.trim()) {
-                      const newSubtask = {
-                        id: crypto.randomUUID(),
-                        title: newSubtaskTitle,
-                        completed: false,
-                      };
-
-                      addSubtask(selectedTask.id, newSubtask);
-
-                      setSelectedTask((prev) =>
-                        prev
-                          ? {
-                              ...prev,
-                              subtasks: [...(prev.subtasks || []), newSubtask],
-                            }
-                          : prev
+                      const newSubtask = await addSubtask(
+                        selectedTask.id,
+                        newSubtaskTitle
                       );
 
-                      setNewSubtaskTitle("");
+                      if (newSubtask) {
+                        const res = await fetch(
+                          `/api/tasks/${selectedTask.id}`
+                        );
+                        const updatedTask = await res.json();
+
+                        setSelectedTask(updatedTask);
+                        setNewSubtaskTitle("");
+                      }
                     }
                   }}
                 >
@@ -189,8 +181,8 @@ export function TaskColumn({
                 variant="destructive"
                 onClick={() => {
                   setTaskToDelete(selectedTask.id);
-                  setIsDeleteModalOpen(true)}
-                }
+                  setIsDeleteModalOpen(true);
+                }}
               >
                 Excluir
               </Button>
@@ -198,7 +190,6 @@ export function TaskColumn({
           )}
         </DialogContent>
       </Dialog>
-
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent>
           <DialogHeader>

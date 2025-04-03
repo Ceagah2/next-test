@@ -5,11 +5,12 @@ import { TaskColumn } from "./task-column";
 
 export function TaskBoard() {
   const { tasks } = useTaskStore();
+  console.log("tasks vindo do banco:", tasks)
 
   const columns = [
-    { title: "A Fazer", status: "A Fazer" },
-    { title: "Em progresso", status: "Em progresso" },
-    { title: "Concluída", status: "Concluída" },
+    { title: "A Fazer", status: "TODO" },
+    { title: "Em progresso", status: "IN_PROGRESS" },
+    { title: "Concluída", status: "DONE" },
   ];
 
   return (

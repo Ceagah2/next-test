@@ -16,24 +16,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/atoms/select";
+import { EnumPriority, EnumStatus } from "@/store/types";
 import { useTaskStore } from "@/store/useTaskStore";
 import { useState } from "react";
 
+const PriorityMap = {
+  Alta: EnumPriority.HIGH,
+  Média: EnumPriority.MEDIUM,
+  Baixa: EnumPriority.LOW,
+} as const;
+
 export function CreateTaskModal() {
   const { addTask } = useTaskStore();
-  const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState<"Baixa" | "Média" | "Alta">("Média");
-  const [description, setDescription] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [title, setTitle] = useState<string>("");
+  const [priority, setPriority] = useState<string>("Média");
+  const [description, setDescription] = useState<string>("");
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  const handleSubmit = () => {
-    if (!title.trim()) return;
-    addTask({ title, priority, status: "A Fazer", description });
-    setTitle("");
-    setPriority("Média");
-    setDescription("");
-    setIsOpen(false); 
-  };
+ const handleSubmit = async () => {
+   if (!title.trim()) return;
+
+   const newTask = {
+     title,
+     priority: PriorityMap[priority as keyof typeof PriorityMap],
+     status: EnumStatus.TO_DO,
+     description,
+     subtasks: [],
+   };
+
+   try {
+     await addTask(newTask);
+     setTitle("");
+     setPriority("Média");
+     setDescription("");
+     setIsOpen(false);
+   } catch (error) {
+     alert((error as Error).message || "Erro ao criar a tarefa!");
+   }
+ };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -59,9 +79,7 @@ export function CreateTaskModal() {
           />
           <Select
             value={priority}
-            onValueChange={(value) =>
-              setPriority(value as "Baixa" | "Média" | "Alta")
-            }
+            onValueChange={(value) => setPriority(value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione a prioridade" />
