@@ -2,17 +2,27 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function PUT(
-  req: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
-  const { title, description, priority, status } = await req.json();
+  try {
+    const { id } = params;
+    const { favorite } = await request.json();
 
-  const updatedTask = await prisma.task.update({
-    where: { id: params.id },
-    data: { title, description, priority, status },
-  });
+    const updatedTask = await prisma.task.update({
+      where: { id },
+      data: { favorite },
+      include: { labels: true },
+    });
 
-  return NextResponse.json(updatedTask);
+    return NextResponse.json(updatedTask);
+  } catch (error) {
+    console.error("Error updating favorite:", error);
+    return NextResponse.json(
+      { error: "Failed to update favorite status" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function DELETE(

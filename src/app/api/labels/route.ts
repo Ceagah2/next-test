@@ -1,31 +1,44 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export async function GET() {
+  const tasks = await prisma.task.findMany({
+    include: {
+      labels: true,
+      subtasks: true,
+    },
+    orderBy: {
+      id: "desc",
+    },
+  });
+  return NextResponse.json(tasks);
+}
+
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    const { title, description, priority, status, labels } =
+      await request.json();
 
-    if (!data.name || !data.color) {
-      return NextResponse.json(
-        { error: "Nome e cor são obrigatórios" },
-        { status: 400 }
-      );
-    }
-
-    const newLabel = await prisma.label.create({
+    const newTask = await prisma.task.create({
       data: {
-        name: data.name,
-        color: data.color,
+        title,
+        description,
+        priority,
+        status,
+        labels: {
+          connect: labels.map((labelId: string) => ({ id: labelId })),
+        },
+      },
+      include: {
+        labels: true,
       },
     });
 
-    return NextResponse.json(newLabel, { status: 201 });
+    return NextResponse.json(newTask, { status: 201 });
   } catch (error) {
-    console.error("Erro na API:", error);
+    console.error(error);
     return NextResponse.json(
-      {
-        error: "Erro ao criar label",
-      },
+      { error: "Failed to create task" },
       { status: 500 }
     );
   }

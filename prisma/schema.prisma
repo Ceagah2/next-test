@@ -27,6 +27,7 @@ model Task {
   priority  EnumPriority
   status    EnumStatus
   subtasks  Subtask[]
+  favorite Boolean @default(false)
   labels    Label[]  @relation("TaskLabels")
 }
 

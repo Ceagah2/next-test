@@ -33,7 +33,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   addTask: async (task) => {
     const res = await fetch("/api/tasks", {
       method: "POST",
-      body: JSON.stringify(task),
+      body: JSON.stringify({
+        ...task,
+        labels: task.labels?.map((label) => label.id),
+      }),
       headers: { "Content-Type": "application/json" },
     });
     if (!res.ok) {
@@ -96,12 +99,33 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   toggleFavorite: async (taskId: string) => {
-    const task = get().tasks.find((task) => task.id === taskId);
-    if (!task) return;
-    const updatedTask = { ...task, favorite: !task.favorite };
-    set((state) => ({
-      tasks: state.tasks.map((t) => (t.id === taskId ? updatedTask : t)),
-    }));
+    try {
+      const task = get().tasks.find((t) => t.id === taskId);
+      if (!task) throw new Error("Tarefa não encontrada");
+
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ favorite: !task.favorite }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Falha na atualização");
+      }
+
+      const updatedTask = await res.json();
+
+      set((state) => ({
+        tasks: state.tasks.map((t) =>
+          t.id === taskId ? { ...t, favorite: updatedTask.favorite } : t
+        ),
+      }));
+
+      return updatedTask;
+    } catch (error) {
+      console.error("Erro ao favoritar:", error);
+      throw error;
+    }
   },
   fetchLabels: async () => {
     const res = await fetch("/api/labels");
