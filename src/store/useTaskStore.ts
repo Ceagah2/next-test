@@ -58,22 +58,38 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   updateTask: async (updatedTask: Task) => {
-    const res = await fetch(`/api/tasks/${updatedTask.id}`, {
-      method: "PUT",
-      body: JSON.stringify(updatedTask),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!res.ok) {
-      const error = await res.json();
-      alert(error.message);
-      return;
+    console.log("updateTask", updatedTask)
+    try {
+      const res = await fetch(`/api/tasks/${updatedTask.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: updatedTask.title,
+          description: updatedTask.description,
+          priority: updatedTask.priority,
+          status: updatedTask.status,
+          labels: updatedTask.labels?.map((l) => l.id),
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message);
+      }
+
+      const taskFromBackend = await res.json();
+
+      set((state) => ({
+        tasks: state.tasks.map((task) =>
+          task.id === taskFromBackend.id ? taskFromBackend : task
+        ),
+      }));
+    } catch (error) {
+      console.error("Update error:", error);
+      alert( "Erro ao atualizar tarefa");
     }
-    const taskFromBackend = await res.json();
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === taskFromBackend.id ? taskFromBackend : task
-      ),
-    }));
   },
 
   duplicateTask: async (taskId: string) => {

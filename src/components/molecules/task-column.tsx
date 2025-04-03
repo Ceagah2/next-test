@@ -17,6 +17,7 @@ export function TaskColumn({ title, tasks }: { title: string; tasks: Task[] }) {
   const [showEditModal, setShowEditModal] = useState(false);
 
   const moveTask = (newStatus: EnumStatus, taskId: string) => {
+    console.log("moveTask", newStatus, taskId)
     const task = tasks.find((t) => t.id === taskId);
     if (task) updateTask({ ...task, status: newStatus });
     closeTaskDetails();
