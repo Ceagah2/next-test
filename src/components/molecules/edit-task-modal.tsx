@@ -15,8 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/atoms/select";
-import { EnumPriority, EnumStatus } from "@/store/types";
-import { Task, useTaskStore } from "@/store/useTaskStore";
+import { EnumPriority, EnumStatus, Task } from "@/store/types";
+import { useTaskStore } from "@/store/useTaskStore";
 
 import { useEffect, useState } from "react";
 

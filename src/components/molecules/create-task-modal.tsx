@@ -16,9 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/atoms/select";
+import { LabelBadge } from "@/components/molecules/label-badge";
 import { EnumPriority, EnumStatus } from "@/store/types";
 import { useTaskStore } from "@/store/useTaskStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const PriorityMap = {
   Alta: EnumPriority.HIGH,
@@ -27,33 +28,48 @@ const PriorityMap = {
 } as const;
 
 export function CreateTaskModal() {
-  const { addTask } = useTaskStore();
+  const { addTask, labels, fetchLabels } = useTaskStore();
   const [title, setTitle] = useState<string>("");
   const [priority, setPriority] = useState<string>("Média");
   const [description, setDescription] = useState<string>("");
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
- const handleSubmit = async () => {
-   if (!title.trim()) return;
+  useEffect(() => {
+    fetchLabels();
+  }, [fetchLabels]);
 
-   const newTask = {
-     title,
-     priority: PriorityMap[priority as keyof typeof PriorityMap],
-     status: EnumStatus.TO_DO,
-     description,
-     subtasks: [],
-   };
+  const handleSubmit = async () => {
+    if (!title.trim()) return;
 
-   try {
-     await addTask(newTask);
-     setTitle("");
-     setPriority("Média");
-     setDescription("");
-     setIsOpen(false);
-   } catch (error) {
-     alert((error as Error).message || "Erro ao criar a tarefa!");
-   }
- };
+    const newTask = {
+      title,
+      priority: PriorityMap[priority as keyof typeof PriorityMap],
+      status: EnumStatus.TO_DO,
+      description,
+      labels: labels.filter((label) => selectedLabels.includes(label.id)),
+      subtasks: [],
+    };
+
+    try {
+      await addTask(newTask);
+      setTitle("");
+      setPriority("Média");
+      setDescription("");
+      setSelectedLabels([]);
+      setIsOpen(false);
+    } catch (error) {
+      alert((error as Error).message || "Erro ao criar a tarefa!");
+    }
+  };
+
+  const handleLabelSelect = (labelId: string) => {
+    setSelectedLabels((prev) =>
+      prev.includes(labelId)
+        ? prev.filter((id) => id !== labelId)
+        : [...prev, labelId]
+    );
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -77,6 +93,7 @@ export function CreateTaskModal() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+
           <Select
             value={priority}
             onValueChange={(value) => setPriority(value)}
@@ -90,6 +107,25 @@ export function CreateTaskModal() {
               <SelectItem value="Baixa">Baixa</SelectItem>
             </SelectContent>
           </Select>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Labels</p>
+            <div className="flex flex-wrap gap-2">
+              {labels.map((label) => (
+                <LabelBadge
+                  key={label.id}
+                  label={label}
+                  onRemove={() => handleLabelSelect(label.id)}
+                  className={
+                    selectedLabels.includes(label.id)
+                      ? "opacity-100 cursor-pointer"
+                      : "opacity-50 hover:opacity-75 cursor-pointer"
+                  }
+                />
+              ))}
+            </div>
+          </div>
+
           <Button onClick={handleSubmit} className="w-full">
             Criar
           </Button>

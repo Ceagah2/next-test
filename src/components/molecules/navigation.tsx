@@ -19,6 +19,11 @@ export function MainNav() {
       label: "Dashboard",
       active: pathname === "/dashboard",
     },
+    {
+      href: "/labels",
+      label: "Labels",
+      active: pathname === "/labels",
+    },
   ];
 
   return (

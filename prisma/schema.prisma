@@ -12,6 +12,13 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL") 
 }
+model Label {
+  id        String   @id @default(uuid())
+  name      String
+  color     String   
+  tasks     Task[]   @relation("TaskLabels")
+  createdAt DateTime @default(now())
+}
 
 model Task {
   id        String    @id @default(uuid())
@@ -20,6 +27,7 @@ model Task {
   priority  EnumPriority
   status    EnumStatus
   subtasks  Subtask[]
+  labels    Label[]  @relation("TaskLabels")
 }
 
 model Subtask {
