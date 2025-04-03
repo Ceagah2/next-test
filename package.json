@@ -7,7 +7,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "npx prisma generate",
-    "build": "npx prisma generate && next build"
+    "build": "DATABASE_URL='file::memory:?cache=shared' next build postinstall"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
