@@ -47,7 +47,9 @@ export function CreateTaskModal() {
       priority: PriorityMap[priority as keyof typeof PriorityMap],
       status: EnumStatus.TO_DO,
       description,
-      labels: labels.filter((label) => selectedLabels.includes(label.id)),
+      labels: Array.isArray(labels)
+        ? labels.filter((label) => selectedLabels.includes(label.id))
+        : [],
       subtasks: [],
     };
 

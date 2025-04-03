@@ -2,18 +2,26 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const tasks = await prisma.task.findMany({
-    include: {
-      labels: true,
-      subtasks: true,
-    },
-    orderBy: {
-      id: "desc",
-    },
-  });
-  return NextResponse.json(tasks);
-}
+  try {
+    const tasks = await prisma.task.findMany({
+      include: {
+        labels: true,
+        subtasks: true,
+      },
+      orderBy: {
+        id: "desc",
+      },
+    });
 
+    return NextResponse.json(tasks ?? []);
+  } catch (error) {
+    console.error("Erro ao buscar tarefas:", error);
+    return NextResponse.json(
+      { error: "Erro no servidor ao buscar tarefas" },
+      { status: 500 }
+    );
+  }
+}
 export async function POST(request: Request) {
   try {
     const { title, description, priority, status, labels } =
