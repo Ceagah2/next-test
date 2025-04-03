@@ -29,10 +29,12 @@ export function TaskColumn({
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
 
   const handleDelete = () => {
+    console.log(taskToDelete);
     if (taskToDelete) {
       deleteTask(taskToDelete);
       setTaskToDelete(null);
       setIsDeleteModalOpen(false);
+      setSelectedTask(null);
     }
   };
 
@@ -186,7 +188,10 @@ export function TaskColumn({
               </div>
               <Button
                 variant="destructive"
-                onClick={() => setIsDeleteModalOpen(true)}
+                onClick={() => {
+                  setTaskToDelete(selectedTask.id);
+                  setIsDeleteModalOpen(true)}
+                }
               >
                 Excluir
               </Button>
