@@ -1,34 +1,29 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url = "file:/tmp/sqlite.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+
 model Label {
   id        String   @id @default(uuid())
   name      String
   color     String   
-  tasks     Task[]   @relation("TaskLabels")
+  tasks     TaskLabel[]
   createdAt DateTime @default(now())
 }
 
 model Task {
-  id        String    @id @default(uuid())
-  title     String
+  id          String      @id @default(uuid())
+  title       String
   description String?
-  priority  EnumPriority
-  status    EnumStatus
-  subtasks  Subtask[]
-  favorite Boolean @default(false)
-  labels    Label[]  @relation("TaskLabels")
+  priority    EnumPriority
+  status      EnumStatus
+  subtasks    Subtask[]
+  favorite    Boolean     @default(false)
+  labels      TaskLabel[]
 }
 
 model Subtask {
@@ -37,6 +32,15 @@ model Subtask {
   completed Boolean  @default(false)
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId    String
+}
+
+model TaskLabel {
+  taskId  String
+  labelId String
+  task    Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId]) 
 }
 
 enum EnumPriority {
